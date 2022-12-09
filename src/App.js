@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { forwardRef, useEffect, useRef, useState } from 'react'
 import './App.css'
 import Box from '@mui/material/Box'
 import Table from '@mui/material/Table'
@@ -9,200 +9,160 @@ import TableRow from '@mui/material/TableRow'
 import Typography from '@mui/material/Typography'
 import moment from 'moment'
 import { CSVLink } from 'react-csv'
-import { Button } from '@mui/material'
+import { Button, Card, Grid, TextField, Select, MenuItem } from '@mui/material'
+import { Container, height } from '@mui/system'
+import html2pdf from 'html2pdf.js'
 
 export default function App() {
   const uploadedDoc = useRef(null)
-  const data = [
-    {
-      nim: 2020230044,
-      name: 'Khoirul Mustaan',
-      major: 'Teknologi Informasi',
-      university: 'Universitas Darma Persada ',
-    },
-    {
-      nim: 2020230018,
-      name: 'Muhammad Respati Abimanyu Putro',
-      major: 'Teknologi Informasi',
-      university: 'Universitas Darma Persada ',
-    },
-    {
-      nim: 2020230065,
-      name: 'Muhammad Faiz',
-      major: 'Teknologi Informasi',
-      university: 'Universitas Darma Persada ',
-    },
-    {
-      nim: 2020230100,
-      name: 'Ahmad Hussein Al Fajri',
-      major: 'Teknologi Informasi',
-      university: 'Universitas Darma Persada ',
-    },
-    {
-      nim: 2020230059,
-      name: 'Muhammad Hatta Alfaritzy',
-      major: 'Teknologi Informasi',
-      university: 'Universitas Darma Persada ',
-    },
-    {
-      nim: 2020230003,
-      name: 'Dhafa Syarif C.K',
-      major: 'Teknologi Informasi',
-      university: 'Universitas Darma Persada ',
-    },
-    {
-      nim: 2020230043,
-      name: 'Aclis Setyo Prihananto',
-      major: 'Teknologi Informasi',
-      university: 'Universitas Darma Persada ',
-    },
-    {
-      nim: 2020230074,
-      name: 'Josi gunawan',
-      major: 'Teknologi Informasi',
-      university: 'Universitas Darma Persada ',
-    },
-    {
-      nim: 2020230013,
-      name: 'Maisyarah Salsabila',
-      major: 'Teknologi Informasi',
-      university: 'Universitas Darma Persada ',
-    },
-    {
-      nim: 2020230016,
-      name: 'Dinda Nurul',
-      major: 'Teknologi Informasi',
-      university: 'Universitas Darma Persada ',
-    },
-  ]
 
   const [rows, setRows] = useState([])
+  const [widthPaper, setWidthPaper] = useState(500)
+  const [heightPaper, setHeightPaper] = useState(800)
+  const [paddingPaper, setPaddingPaper] = useState(5)
+  const [orientation, setOrientation] = useState('portrait')
+  const [nameFile, setNameFile] = useState('')
 
-  let headers = [
-    { label: 'Nama', key: 'name' },
-    { label: 'Nim', key: 'nim' },
-    { label: 'Jurusan', key: 'major' },
-    { label: 'Universitas', key: 'university' },
-  ]
+  var element = useRef()
 
-  const handleImportCSV = (value) => {
-    const reader = new FileReader()
-
-    reader.onload = function (e) {
-      const text = e.target.result
-      processCSV(text)
-    }
-
-    reader.readAsText(value)
+  var opt = {
+    margin: paddingPaper,
+    filename: nameFile ? nameFile + '.pdf' : 'Test.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'in', format: 'letter', orientation },
   }
 
-  function renameObject(oldObj, newObj) {
-    return oldObj.map((item, index) => {
-      item = newObj[index]
-      return item
-    })
+  const handlePrint = async () => {
+    html2pdf().from(element.current).set(opt).preview()
   }
 
-  const processCSV = async (str, delim = ';') => {
-    const headers = str.slice(0, str.indexOf('\n')).split(delim)
-    const rows = str.slice(str.indexOf('\n') + 1).split('\n')
-    const newHeaders = ['nim', 'name', 'major', 'university']
-    const resultHeaders = await renameObject(headers, newHeaders)
-    const newArray = rows.map((row) => {
-      const values = row.split(delim)
-      const eachObject = resultHeaders.reduce((obj, header, i) => {
-        obj[header] = values[i].replace(/^"(.*)"$/, '$1')
-        return obj
-      }, {})
-      return eachObject
-    })
-    setRows(newArray)
-  }
-
-  console.log('new rows', rows)
-
-  useEffect(() => {
-    setRows(data)
-  }, [])
+  const Content = forwardRef((props, ref) => {
+    return (
+      <Card
+        ref={ref}
+        sx={{
+          width:
+            orientation === 'landscape'
+              ? heightPaper
+              : orientation === 'portrait'
+              ? widthPaper
+              : 500,
+          height:
+            orientation === 'landscape'
+              ? widthPaper
+              : orientation === 'portrait'
+              ? heightPaper
+              : 800,
+          padding: paddingPaper ? paddingPaper : 5,
+        }}>
+        <div>header</div>
+        <div>content</div>
+      </Card>
+    )
+  })
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
+    <div
+      style={{
+        backgroundColor: '#f0f0f0',
         flex: 1,
-        padding: 10,
-        alignItems: 'center',
+        display: 'flex',
+        paddingBottom: 50,
       }}>
-      <Box
-        sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'flex-end',
-        }}>
-        <CSVLink
-          data={data}
-          headers={headers}
-          filename={`data-${moment().format('YYYYMMDDHHmmss')}.csv`}
-          separator=';'>
-          <Button variant='contained' color='secondary'>
-            <Typography
-              align='left'
-              sx={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
-              Export To CSV
-            </Typography>
-          </Button>
-        </CSVLink>
-        <input
-          type='file'
-          ref={uploadedDoc}
-          hidden
-          onChange={(e) => handleImportCSV(e?.target?.files[0])}
-        />
-        <Button
-          onClick={() => uploadedDoc.current.click()}
-          variant='contained'
-          color='info'
-          sx={{ ml: 1 }}>
-          <Typography
-            align='left'
-            sx={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
-            Import CSV To JSON
-          </Typography>
-        </Button>
-        <Button
-          onClick={() => setRows([])}
-          variant='contained'
-          color='info'
-          sx={{ ml: 1 }}>
-          <Typography
-            align='left'
-            sx={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
-            Clear Data
-          </Typography>
-        </Button>
-      </Box>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Nim</TableCell>
-            <TableCell>Jurusan</TableCell>
-            <TableCell>Universitas</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((item) => (
-            <TableRow>
-              <TableCell>{item.name}</TableCell>
-              <TableCell>{item.nim}</TableCell>
-              <TableCell>{item.major}</TableCell>
-              <TableCell>{item.university}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </Box>
+      <Container>
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'row',
+            py: 2,
+            mt: 2,
+          }}>
+          <Grid container alignItems='center' justifyContent='flex-end'>
+            <div style={{ marginLeft: 10 }}>
+              <Typography>Nama File PDF</Typography>
+              <TextField
+                color='info'
+                type='text'
+                value={nameFile}
+                placeholder='Nama File PDF'
+                onChange={(e) => {
+                  setNameFile(e.target.value)
+                }}
+              />
+            </div>
+            <div style={{ marginLeft: 10 }}>
+              <Typography>Orientation</Typography>
+              <Select
+                color='info'
+                onChange={(e) => {
+                  setOrientation(e.target.value)
+                }}
+                value={orientation}>
+                <MenuItem value={'landscape'}>Landscape</MenuItem>
+                <MenuItem value={'portrait'}>Portrait</MenuItem>
+              </Select>
+            </div>
+            <div style={{ marginLeft: 10 }}>
+              <Typography>Jarak Konten</Typography>
+              <TextField
+                color='info'
+                type='text'
+                value={paddingPaper}
+                placeholder='Jarak Content'
+                onChange={(e) => {
+                  setPaddingPaper(Number(e.target.value))
+                }}
+              />
+            </div>
+            <div style={{ marginLeft: 10 }}>
+              <Typography>Lebar</Typography>
+              <TextField
+                color='info'
+                type='text'
+                value={widthPaper}
+                placeholder='Lebar'
+                onChange={(e) => {
+                  setWidthPaper(Number(e.target.value))
+                }}
+              />
+            </div>
+            <div style={{ marginLeft: 10 }}>
+              <Typography>Tinggi</Typography>
+              <TextField
+                color='info'
+                type='text'
+                value={heightPaper}
+                placeholder='Lebar'
+                onChange={(e) => {
+                  setHeightPaper(Number(e.target.value))
+                }}
+              />
+            </div>
+            <Button
+              variant='contained'
+              color='info'
+              sx={{ ml: 1, width: 100, height: 50, mt: 3 }}
+              onClick={handlePrint}>
+              <Typography
+                align='left'
+                sx={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
+                Download
+              </Typography>
+            </Button>
+          </Grid>
+        </Box>
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'center',
+          }}>
+          <Content ref={element} />
+        </Box>
+      </Container>
+    </div>
   )
 }
