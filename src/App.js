@@ -12,6 +12,7 @@ import { CSVLink } from 'react-csv'
 import { Button, Card, Grid, TextField, Select, MenuItem } from '@mui/material'
 import { Container, height } from '@mui/system'
 import html2pdf from 'html2pdf.js'
+import { useReactToPrint } from 'react-to-print'
 
 export default function App() {
   const uploadedDoc = useRef(null)
@@ -33,9 +34,13 @@ export default function App() {
     jsPDF: { unit: 'in', format: 'letter', orientation },
   }
 
-  const handlePrint = async () => {
+  const handleDownload = async () => {
     html2pdf().from(element.current).set(opt).preview()
   }
+
+  const handlePreview = useReactToPrint({
+    content: () => element.current,
+  })
 
   const Content = forwardRef((props, ref) => {
     return (
@@ -61,6 +66,24 @@ export default function App() {
       </Card>
     )
   })
+
+  const pageStyle = `
+  @page {
+    size: 80mm 50mm;
+  }
+
+  @media all {
+    .pagebreak {
+      display: none;
+    }
+  }
+
+  @media print {
+    .pagebreak {
+      page-break-before: always;
+    }
+  }
+`
 
   return (
     <div
@@ -144,11 +167,22 @@ export default function App() {
               variant='contained'
               color='info'
               sx={{ ml: 1, width: 100, height: 50, mt: 3 }}
-              onClick={handlePrint}>
+              onClick={handleDownload}>
               <Typography
                 align='left'
                 sx={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
                 Download
+              </Typography>
+            </Button>
+            <Button
+              variant='contained'
+              color='info'
+              sx={{ ml: 1, width: 100, height: 50, mt: 3 }}
+              onClick={handlePreview}>
+              <Typography
+                align='left'
+                sx={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
+                Preview
               </Typography>
             </Button>
           </Grid>
